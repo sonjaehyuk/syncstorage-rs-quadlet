@@ -35,5 +35,5 @@ RUN rm -rf \
     /var/lib/dpkg
 
 # Copy entrypoint script and set it
-COPY --chmod=755 entrypoint.sh /
-ENTRYPOINT /entrypoint.sh
+COPY --chmod=755 newentrypoint.sh /
+ENTRYPOINT exec /newentrypoint.sh
