@@ -1,0 +1,6 @@
+[Unit]
+Description=mysqlnet (user-defined bridge for MySQL and friends)
+
+[Network]
+Driver=bridge
+Label=app=mysql

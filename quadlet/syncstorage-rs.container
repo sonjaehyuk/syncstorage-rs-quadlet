@@ -1,0 +1,33 @@
+[Unit]
+Description=firefox syncstorage-rs
+After=mysql.container
+Requires=mysql.container
+
+[Container]
+Image=syncstorage-rs:latest
+Volume=%h/ca.pem:/etc/ssl/mysql/ca.pem:ro,Z
+Network=mysqlnet.network
+PublishPort=18001:8000
+
+Environment=SSL_CERT_FILE=/etc/ssl/mysql/ca.pem
+
+Environment=LOGLEVEL=warn
+Environment=SYNC_URL=https://sync.sonjaehyuk.me
+Environment=SYNC_CAPACITY=10
+Secret=mysql-root-password,type=env,target=SYNC_DB_ADMIN_PASSWORD
+Secret=sync-password,type=env,target=SYNC_SYNCSTORAGE_DB_PASSWORD
+Secret=sync-password,type=env,target=SYNC_TOKENSERVER_DB_PASSWORD
+# Master sync key (must be 64 characters long)
+# Use: `cat /dev/urandom | base32 | head -c64` to generate a random value
+Secret=sync-master-secret,type=env,target=SYNC_MASTER_SECRET
+# Hashing secret (must be 64 characters long)
+# Use: `cat /dev/urandom | base32 | head -c64` to generate a random value
+Secret=sync-metrics-hash-secret,type=env,target=METRICS_HASH_SECRET
+
+[Service]
+TimeoutStartSec=900
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
