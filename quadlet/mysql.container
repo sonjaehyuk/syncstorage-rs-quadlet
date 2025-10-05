@@ -1,0 +1,43 @@
+[Unit]
+Description=MySQL - rootless
+
+[Container]
+Image=docker.io/library/mysql:8.0.43-debian
+# 컨테이너 내부에서 파일 형태로 비밀값을 읽는 것이 가능합니다(MYSQL_ROOT_PASSWORD_FILE).
+# 그러나 당신이 DB port를 외부로 노출하는 짓을 하지 않는 이상 podman secret으로만 관리하는 것도 충분히 괜찮아 보입니다.
+# 로컬 테스트용: Environment=MYSQL_ROOT_PASSWORD=mysql
+# Secrets: create with `podman secret create mysql-root-password -` and provide content
+Secret=mysql-root-password,type=env,target=MYSQL_ROOT_PASSWORD
+
+Volume=%h/mysql/mysql:/var/lib/mysql:Z
+Volume=%h/ca.pem:/etc/mysql/ssl/ca.pem:ro,Z
+# Volume=%h/server.crt:/etc/mysql/ssl/server.crt:ro,Z
+# Volume=%h/server.key:/etc/mysql/ssl/server.key:ro,Z
+Secret=mysql-server-crt,type=mount,target=/etc/mysql/ssl/server.crt,mode=0444
+Secret=mysql-server-key,type=mount,target=/etc/mysql/ssl/server.key,mode=0444
+Volume=%h/mysql/ssl.cnf:/etc/mysql/conf.d/ssl.cnf:ro,Z
+
+PublishPort=13306:3306
+Network=mysqlnet.network
+NetworkAlias=mysql
+
+# Set or alter a healthcheck command for a container. A value of none disables existing
+HealthCmd=/bin/sh -c "mysqladmin ping -h 127.0.0.1 -u root -p$MYSQL_ROOT_PASSWORD"  healthchecks.
+# Set an interval for the healthchecks. An interval of disable results in no automatic timer setup.
+HealthInterval=60s
+# The maximum time allowed to complete the healthcheck before an interval is considered failed.
+HealthTimeout=10s
+# The number of retries allowed before a healthcheck is considered to be unhealthy.
+HealthRetries=5
+# The initialization time needed for a container to bootstrap.
+HealthStartPeriod=60s
+
+[Service]
+TimeoutStartSec=900
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+
+# 구체적인 값은 상황에 따라 달라질 수 있습니다.
